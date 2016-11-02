@@ -3473,7 +3473,7 @@ callbacks.shift()();
 
 ---
 
-## Lựa chọn mô hình phù hợp theo lý thuyết kinh tế
+## Lựa chọn mô hình theo lý thuyết kinh tế
 
 - Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.
 
