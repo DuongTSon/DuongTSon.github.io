@@ -1,0 +1,449 @@
+---
+title: "VECM"
+author: "Duong Son"
+date: "October 20, 2016"
+output:
+    html_document:
+      toc: true
+      toc_depth: 2
+      toc_float: true
+      number_sections: yes
+      theme: united
+      hightlight: tango
+      fig_width: 8
+      fig_height: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE,warning=FALSE)
+Sys.setlocale("LC_CTYPE","vietnamese")
+```
+
+# Chu kỳ kinh tế và ảnh hưởng tới hoạt động ngân hàng
+
+Một nghiên cứu của ECB (F.Boissay, F.Collard và F.Smets 2012) đã phát hiện 3 stylized facts về suy thoái kinh tế và khủng hoảng ngành ngân hàng tại các quốc gia phát triển:
+<ul>
+  <li>Suy thoái kinh tế xảy ra trung bình 10 năm 1 lần và khủng hoảng ngân hàng xảy ra trung bình 40 năm 1 lần </li>
+  <li>Suy thoái kinh tế xảy ra cùng với khủng hoảng ngân hàng gây ra hậu quả lớn và lâu dài hơn so với suy thoái kinh tế đơn thuần</li>
+  <li>Khủng hoảng ngành ngân hàng không xảy ra ngẫu nhiên mà thường ở thời kỳ bùng nổ tín dụng </li>
+</ul>
+
+Tại châu Á, một số đặc điểm nói trên có thể thấy tại cuộc khủng hoảng tài chính châu Á năm 1997.Khi đó nhiều quốc gia tại châu Á như Hàn Quốc, Hồng Kong, Thái Lan, Malaysia ở trong giai đoạn bùng nổ kinh tế, tín dụng tăng trưởng nóng và luồng vốn đầu tư nước ngoài chảy vào mạnh mẽ (hot money). Tốc độ tăng trưởng trung bình của các quốc gia này từ 8-12% trong giai đoạn 1980 đến 1993. Tuy nhiên, hệ thống tín dụng dựa trên mối quan hệ, chính sách của chính phủ và các cú sốc từ nền kinh tế Trung Quốc, Nhật Bản và Mỹ đã đẩy các nền kinh tế trên vào khủng hoảng.Tại Thái Lan, đồng Bath mất hơn 50% giá trị, thị trường chứng khoán giảm 75%, công ty tài chính lớn nhất Thái lan phá sản. Nợ xấu tại Hàn quốc tăng mạnh khiến 787 tổ chức tín dụng mất khả năng thanh toán, đồng won giảm gần 1 nửa giá trị.
+
+Tại Việt Nam, hệ thống tài chính tương đối non trẻ, tuy nhiên cũng đã xảy ra 2 cuộc khủng hoảng đáng chú ý: Khủng hoảng quỹ tín dụng nhân dân (1990) và suy thoái kinh tế (2009-2013). Nguyên nhân gây ra suy thoái kinh tế Việt Nam có khá nhiều điểm tương đồng so với cuộc khủng hoảng tài chính châu Á nói trên.
+
+Do đó, dự báo được kinh tế vĩ mô nói chung và khủng hoảng nói riêng sẽ giúp ngân hàng phòng tránh được những rủi ro lớn phát sinh, đồng thời đưa ra các kịch bản ứng phó phù hợp.
+
+```{r bunch_o_figs_svg, fig.height=4, fig.width=8, dev='svg'}
+#Load library
+library(zoo)
+library(xts)
+library(ggplot2)
+library(vars)
+library(tseries)
+library(urca)
+library(gridExtra)
+library(knitr)
+library(quantmod)
+library(forecast)
+
+d<-read.csv("VECM_data.csv",header=TRUE,sep=",")
+quarter<-as.yearqtr(d[,1],format="%Y Q%q")
+d<-xts(d[,-c(1)],order.by=quarter)
+
+# Actual set
+actual<-log(d)
+
+
+# Training set
+training<-window(actual,start=as.yearqtr("2000 Q1",format="%Y Q%q"),end=as.yearqtr("2015 Q3",format="%Y Q%q"))
+
+data<-actual
+
+growth<-diff(data,lag=4,differences=1)*100
+growth<-na.omit(growth)
+
+gdp.plot<-ggplot(growth,aes(x=index(growth),y=GDP))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(growth)),max(index(growth))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("GDP growth")
+
+cpi.plot<-ggplot(growth,aes(x=index(growth),y=CPI))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(growth)),max(index(growth))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("Inflation rate")
+
+rate.plot<-ggplot(d,aes(x=index(d)))+
+		geom_line(aes(y=Lending_rate,colour="Lending rate"))+
+		geom_line(aes(y=Deposit_rate,colour="Deposit rate"))+
+		theme(legend.title=element_blank(),legend.position="bottom")+
+		scale_x_yearqtr(limits=c(min(index(d)),max(index(d))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("Interest rate")
+
+exrate.plot<-ggplot(growth,aes(x=index(growth),y=Exchange_rate))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(growth)),max(index(growth))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("SBV Exchangre rate")
+
+grid.arrange(gdp.plot,cpi.plot,rate.plot,exrate.plot,ncol=2)
+
+```
+
+
+# Mô hình dự báo & phân tích kinh tế vĩ mô
+## Cơ sở lý luận chung về dự báo & phân tích kinh tế vĩ mô
+
+Dự báo dựa trên phân tích hồi quy. Mô hình dự báo chuỗi thời gian sẽ giúp dự báo các giá trị tương lai về một đối tượng dự báo nào đó trên nền tảng xu hướng vận động của chính chuỗi dữ liệu đó trong quá khứ và hiện tại. Tuy nhiên, các biến kinh tế thường có các mối quan hệ với nhau, và dựa trên các mối quan hệ đó mà chúng ta có thể suy luận được hành vi của một biến số nào đó khi đã có thông tin từ các biến số khác có liên quan.
+
+Các nhà hoạch định chính sách vĩ mô có thể dự báo được tốc độ tăng trưởng kinh tế trên cơ sở dự đoán được các thông tin tương lai về cung tiền, lãi suất, hay chi tiêu công. Hoặc các nhà nghiên cứu có thể dự đoán được mức độ chi tiêu của dân cư cho một nhóm hàng hóa nào đó trên cơ sở dự đoán xu hướng gia tăng trong thu nhập và trình độ học vấn. Để có thể làm được như vậy, các phương pháp phân tích hồi quy trở thành một trong những công cụ vô cùng hữu ích. Ngoài ra, phân tích hồi quy còn giúp những người nghiên cứu kiểm chứng nhiều giả thiết kinh tế quan trọng nhằm có thêm thông tin chắc chắn cho việc ra quyết định về chính sách hay giải pháp nào đó.
+
+Có nhiều mô hình tích hợp được sử dụng trong ước lượng & dự báo các biến số kinh tế (ARIMA, VAR, VECM…)
+
+### Mô hình ARIMA
+Là phương pháp dự báo yếu tố nghiên cứu một cách độc lập ( dự báo theo chuỗi thời gian). Bằng các thuật toán sử dụng độ trễ sẽ đưa ra mô hình dự báo thích hợp. Mô hình ARIMA có tên gọi Mô hình tự hồi quy trung bình trượt. Mô hình này lần đầu tiên được đưa ra bởi Box & Jenkins (1970). ARIMA được kết hợp bởi 3 thành thành phần chính: AR (thành phần tự hồi quy), I (tính dừng của chuỗi thời gian) và MA (thành phần trung bình trượt). Để ước lượng mô hình ARIMA cần 4 buớc: nhận dạng mô hình, uớc luợng, kiểm dịnh, và dự báo. Tuy nhiên, mô hình ARIMA chỉ tiến hành phân tích trên một chuỗi thời gian (1 biến & dữ liệu quá khứ của nó).
+
+### Mô hình VAR
+Mô hình VAR (Mô hình tự hồi quy vecto) được nhà khoa học kinh tế Mỹ là Chrishtopher Sims đề xuất vào năm 1980. Về bản chất, VAR là kết hợp của 2 phương pháp: tự hồi quy đơn chiều (AR) và hệ phương trình ngẫu nhiên (Ses). VAR tổng hợp được ưu điểm của 2 phương pháp trên, đó là rất dễ ước lượng bằng phương pháp tối thiểu hóa phần dư (OLS) và ước lượng nhiều biến trong cùng 1 hệ thống. Đồng thời nó khắc phục được nhược điểm là không quan tâm đến tính nội sinh khi tác động qua lại lẫn nhau của các biến kinh tế. Điều này làm cho phương pháp cổ điển hồi quy bội hồi 1 phương trình hồi quy đôi khi bị sai lệch ước lượng. Đây là lý do cơ bản khiến VAR trở nên phổ biến trong nghiên cứu kinh tế vĩ mô.
+
+Với K biến, mô hình VAR bậc p có dạng phương trình sau:
+<center><bold><font size="4">$y_{t}=A_{1}y_{t-1} +...+ A_{p}y_{t-p}+u_{t}$</font></bold></center>
+
+Trong đó $A_{i}$ là ma trận hệ số (KxK) và $u_{t}=(u_{1t}...,u_{Kt})$
+
+
+### Mô hình VECM
+Mô hình VECM là một dạng của mô hình VAR tổng quát, được sử dụng trong trường hợp chuỗi dữ liệu là không dừng và chứa đựng mối quan hệ đồng kết hợp. Mô hình VECM là phù hợp khi chúng ta có nhiều chuỗi thời gian khác nhau và cần phải xem xét mối quan hệ, tác động qua lại giữa chúng.
+
+-	Tính dừng (stationary)
+
+Để dự báo chính xác, chuỗi thời gian phải có tính dừng. Một chuỗi thời gian là dừng nếu trung bình, phương sai và tự đồng phương sai (tại các độ trễ khác nhau) sẽ giữ nguyên không đổi dù cho chúng được xác định vào thời điểm nào đi nữa.
+Tuy nhiên hầu hết các biến kinh tế là những chuỗi thời gian không có tính dừng. Để chuyển thành chuỗi dừng, phải dùng kỹ thuật sai phân. Ngoài ra, mô hình VECM sẽ giải quyết vấn đề này mà không cần sai phân dữ liệu.
+
+-	Đồng kết hợp (cointegration)
+
+Đồng kết hợp (Đồng tích hợp) là khái niệm cơ bản của kinh tế lượng hiện đại, là một khái niệm cơ bản của kinh tế học và mô hình hóa tài chính, phân tích chuỗi. Theo nghiên cứu nổi tiếng của Engle và Granger (1986), khi xét mô hình có nhiều biến số theo chuỗi thời gian, cũng có nhiều trường hợp, mặc dù các biến số là không dừng, nhưng khi thực hiện phép hồi quy hay tổ hợp tuyến tính của các biến này vẫn cho nhiễu trắng (được một chuỗi dừng). Trong trường hợp này, mô hình vẫn có thể ước lượng được mà không bị hiện tượng hồi quy giả mạo và mối quan hệ giữa các biến được gọi là quan hệ đồng tích hợp (Cointegrating relationships).
+
+Mô hình VECM có phương trình như sau:
+<center><bold><font size="4">$\Delta y_{t}= \Pi y_{t-1} + \Gamma_{1}\Delta y_{t-1} +...+\Gamma_{p-1}\Delta y_{t-p+1} + u_{t}$</font></bold></center>
+
+Trong đó $\Pi=-(I_{K}-A_{1}-...-A_{p})$ và $\Gamma=-(A_{i+1}+...+A_{p})$ với $i=1,...,p-1$ 
+
+### Hàm phản ứng đẩy (Impulse Response Function)
+Hàm phản ứng đẩy IRF cho chúng ta biết được có hay không sự ảnh hưởng của cú sốc đến các biến còn lại.  Khác biệt giữa dự báo và kết quả (lỗi dự báo) đối với một biến cụ thể được coi là một loại "cú sốc" Ví dụ như lãi suất bất ngờ thay đổi có thể là phản ứng trước một cú sốc khác, ví dụ như thất nghiệp hay lạm phát, cũng có thể chúng xảy ra hoàn toàn "độc lập". Sự thay đổi một cách độc lập ấy được gọi là "cú sốc cơ bản". Phân tích “phản ứng đẩy” minh họa tác động của các cú sốc cơ bản đối với các biến số vĩ mô qua thời gian. Phân tích "phản ứng đẩy" giúp chúng ta hiểu thêm về kinh tế vĩ mô và đã có những ảnh hưởng to lớn tới việc thi hành chính sách tiền tệ. VÍ dụ, việc một NHTW có lạm phát mục tiêu điều chỉnh lãi suất để đạt tới mức mục tiêu đó trong vòng 1-2 năm đã là chuyện bình thường. Chính sách tiền tệ thắt chặt đồng nghĩa với việc 1-2 năm sau lạm phát mới thấp còn GDP giảm ngay lập tức.
+
+Hàm IRF có phương trình như sau:
+
+<center><bold><font size="4">$y_{t}=\Xi \sum_{i=1}^t u_{i} + \Xi^*(L)u_{t} + y_{0}^*$</font></bold></center>
+
+## Xây dựng mô hình
+### Cơ sở lý thuyết mô hình
+
+Mô hình dự báo dựa trên mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia - IMF 2013), phương trình như sau:
+
+$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$
+
+Trong đó:
+<ol>
+  <li>$p$: Chỉ số giá tiêu dùng</li>
+  <li>$\epsilon$ : Tỷ giá danh nghĩa</li>
+  <li>$p^W$ : Giá hàng hóa thế giới</li>
+  <li>$M$ : Cung tiền</li>
+  <li>$Y$ : GDP</li>
+  <li>$r$ : Lãi suất danh nghĩa</li>
+</ol>
+
+Mặc dù mô hình trên được sử dụng để phân tích các nhân tố tác động đến lạm phát, các biến số kinh tế vĩ mô có tác động qua lại với nhau. Do đó, mô hình trên cũng có thể được dùng để phân tích và dự báo lãi suất, tỷ giá và tăng trưởng kinh tế.
+
+### Kiểm tra dữ liệu
+
+Kiểm định tính dừng(stationary) của chuỗi dữ liệu bằng Dickey-Fuller test:
+
+```{r results="asis"}
+data<-actual
+
+adf.matrix<-matrix(0,7,2)
+adf<-data.frame(names(data),adf.matrix)
+
+names(adf)<-c("Variable","ADF","p-value")
+
+for (i in 1:7){
+  t<-adf.test(data[,i])
+  adf[i,2]<-t$statistic
+  adf[i,3]<-t$p.value}
+
+remove(adf.matrix,i,t)
+
+kable(adf,digits=4,format="markdown",align='c')
+```
+
+Các chuỗi dữ liệu khi kiểm định đều có p-value lớn, do đó các chuỗi dữ liệu là không dừng.
+
+Kiểm định tính đồng liên kết trong chuỗi dữ liệu:
+
+```{r results="asis"}
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+rank.test<-cbind(test=vecm@teststat,vecm@cval)
+
+coint.rank=2
+# for (i in 1:nrow(rank.test)){
+#   if (rank.test[i,1]>rank.test[i,4]){
+#     coint.rank=nrow(rank.test)-i
+#     break
+#   }
+# }
+
+kable(rank.test,digits=2,format="markdown",align='c')
+```
+
+Kết quả cho thấy xác suất đến 99% có 2 cặp chuỗi dữ liệu có tính đồng liên kết.
+
+Mô hình ước lượng nhiều biến, chuỗi dữ liệu là không dừng và đồng liên kết. Như vậy, mô hình VECM là phù hợp khi chúng ta có nhiều chuỗi thời gian khác nhau và cần phải xem xét mối quan hệ, tác động qua lại giữa chúng.
+
+### Ước lượng mô hình
+
+Mô hình được ước lượng bằng phương pháp OLS với bậc đồng liên kết bằng 2. Kết quả ước lượng mô hình như sau:
+
+```{r results="asis"}
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=coint.rank)
+vecm.level<-vec2var(vecm,r=coint.rank)
+
+# Cointegration vectors
+kable(vecm.r2$beta,digits=4,format="markdown",align='c')
+```
+
+
+### Kiểm định mô hình
+
+```{r}
+#Diagnostic testing
+##Test heteroscedasticity - OK
+var.arch<-arch.test(vecm.level,lags.multi=5,multivariate.only=T)
+var.arch
+
+```
+
+
+```{r}
+##Testing for normality - OK
+var.norm<-normality.test(vecm.level,multivariate.only=T)
+var.norm
+```
+
+
+```{r}
+##Testing serial correlation - OK
+var.serial<-serial.test(vecm.level,lags.pt=20,type="PT.asymptotic")
+var.serial
+```
+
+
+
+### Kiểm định khả năng dự báo
+
+```{r}
+# Training data
+data<-training
+
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+
+rank.test<-cbind(test=vecm@teststat,vecm@cval)
+
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=2)
+vecm.level<-vec2var(vecm,r=2)
+
+#Forecast
+## Forecast horizon
+horizon=4
+
+x<-c(1:horizon)
+for (i in 1:horizon){
+  if (horizon==1){x[1]<-max(index(data))+0.25}
+  else {x[1]<-max(index(data))+0.25
+  x[i]<-max(x)+0.25}
+}
+x<-as.yearqtr(x)
+
+## Forecast
+p<-predict(vecm.level,n.ahead=horizon)
+forecast<-p$fcst
+
+##Create forecast matrices for each variable
+variable<-names(data)
+f.list<-list()
+
+for (i in 1:length(variable)){
+value<-cbind(data[,i],lower=data[,i],upper=data[,i])
+f<-as.data.frame(forecast[i])
+f<-data.frame(f[,1:3])
+f<-xts(f,x)
+f<-rbind(value,f)
+f<-exp(f)
+f.list[[i]]<-assign(as.character(variable[i]),f)
+}
+
+```
+Khả năng dự báo của mô hình được kiểm định bằng 3 hệ số Trung bình sai số tuyệt đối (RMSE), Trung bình sai số tuyệt đối bình phương (MAE) và Phần trăm sai số tuyệt đối bình quân (MAPE),hệ số càng nhỏ, khả năng dự báo càng chính xác, cụ thể như sau:
+
+```{r}
+# Comparision data
+a.indicator<-c("RMSE","MAE","MAPE")
+accuracy.matrix<-matrix(0,nrow=3,ncol=7)
+accuracy.table<-data.frame(a.indicator,accuracy.matrix)
+names(accuracy.table)<-c("Indicators",variable)
+
+for (i in 1:7){
+  # Construct data set
+  f.temp<-window(f.list[[i]][,1],start=as.yearqtr("2015 Q4",format="%Y Q%q"))
+  a.temp<-window(exp(actual[,i]),start=as.yearqtr("2015 Q4",format="%Y Q%q"))
+  
+  # COnvert to forecast object
+  fc<-structure(f.temp,class="forecast")
+  # Accuracy test
+  a<-accuracy(fc,a.temp[,1],d=0)
+  
+  # Paste values to accuracy table
+  for (j in a.indicator) {
+    accuracy.table[,i+1]<-a[c(2,3,5)]
+  }
+}
+kable(accuracy.table,digits=2,format="markdown")
+
+```
+
+
+
+# Ứng dụng của mô hình
+## Dự báo kinh tế vĩ mô
+Dựa trên kết quả kiểm tra khả năng dự báo, có thể thấy mô hình có thể dự báo tương đối chính xác GDP, CPI, tăng trưởng tín dụng, lãi suất và tỷ giá (như hình dưới):
+
+```{r}
+# Actual data
+data<-actual
+
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+
+rank.test<-cbind(test=vecm@teststat,vecm@cval)
+
+# coint.rank=2
+# for (i in 1:nrow(rank.test)){
+#   if (rank.test[i,1]>rank.test[i,4]){
+#     coint.rank=nrow(rank.test)-i
+#     break
+#   }
+# }
+
+
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=2)
+vecm.level<-vec2var(vecm,r=2)
+
+#Forecast
+## Forecast horizon
+horizon=4
+
+x<-c(1:horizon)
+for (i in 1:horizon){
+  if (horizon==1){x[1]<-max(quarter)+0.25}
+  else {x[1]<-max(quarter)+0.25
+  x[i]<-max(x)+0.25}
+}
+x<-as.yearqtr(x)
+
+## Forecast
+p<-predict(vecm.level,n.ahead=horizon)
+forecast<-p$fcst
+
+##Create forecast matrices for each variable
+variable<-names(data)
+f.list<-list()
+
+for (i in 1:length(variable)){
+value<-cbind(data[,i],lower=data[,i],upper=data[,i])
+f<-as.data.frame(forecast[i])
+f<-data.frame(f[,1:3])
+f<-xts(f,x)
+f<-rbind(value,f)
+f<-exp(f)
+f.list[[i]]<-assign(as.character(variable[i]),f)
+}
+
+
+output.var<-c("GDP (%YoY)","Inflation (%YoY)","Credit growth (%YoY)","Lending rate (%)","NEER")
+output.matrix<-matrix(0,nrow=5,ncol=horizon)
+output.table<-data.frame(output.var,output.matrix)
+length<-length(index(f.list[[1]]))
+names(output.table)<-c("Indicators",as.character(index(f.list[[1]][(length-horizon+1):length])))
+
+
+date<-index(f.list[[1]])
+
+# Convert GDP forecast
+gdp.growth<-Delt(as.numeric(GDP[,1]),k=4,type="arithmetic")*100
+# Inflation forecast
+cpi.growth<-Delt(as.numeric(CPI[,1]),k=4,type="arithmetic")*100
+# Credit growth forecast
+credit.growth<-Delt(as.numeric(Credit[,1]),k=4,type="arithmetic")*100
+# Lending rate forecast
+lending<-as.numeric(Lending_rate[,1])
+# Exchange rate
+exrate<-as.numeric(Exchange_rate[,1])
+
+output<-data.frame(gdp.growth,cpi.growth,credit.growth,lending,exrate)
+output<-xts(output,date)
+output<-window(output,start=index(f.list[[1]][(length-horizon+1)]))
+
+output.table[,2:ncol(output.table)]<-as.numeric(t(output))
+
+kable(output.table,digits=2,format="markdown")
+
+```
+
+## Dự báo tác động của chính sách
+Một ứng dụng quan trọng khác của mô hình là khả năng phân tích tác động của chính sách tiền tệ với nền kinh tế nói chung và hoạt động kinh doanh nói riêng thông qua hàm xung ứng.
+
+Ví dụ:
+Phân tích ảnh hưởng của lãi suất huy động tới lãi suất cho vay vàảnh hưởng của lãi suất cho vay tới tăng trưởng tín dụng:
+Đồ thị cho thấy lãi suất huy động có ảnh hưởng cùng chiều tới lãi suất cho vay lớn nhất trong 2 quý đầu tiên, tác động sẽ giảm mạnh kể từ quý thứ 3. 
+
+```{r}
+#Impulse response
+irf.deposit.lending<-irf(vecm.level,impulse="Deposit_rate",response="Lending_rate",n.ahead=12,boot=T)
+irf.deposit.credit<-irf(vecm.level,impulse="Deposit_rate",response="Credit",n.ahead=12,boot=T)
+irf.exrate.cpi<-irf(vecm.level,impulse="Exchange_rate",response="CPI",n.ahead=12,boot=T)
+irf.oil.cpi<-irf(vecm.level,impulse="oil",response="CPI",n.ahead=12,boot=T)
+
+plot(irf.deposit.lending)
+```
+
+Trái lại, lãi suất cho vay không có tác động đáng kể tới tăng trưởng tín dung, nguyên nhân 1 phần do lãi suất tại Việt nam chưa theo cơ chế thị trường, mà bị kiểm soát bởi các biện pháp hành chính.
+```{r}
+plot(irf.deposit.credit)
+```
+
+Biến động giá dầu có tác động khá lớn tới lạm phát tại nước ta. Tuy nhiên, tác động có độ trễ khoảng 3 đến 4 quý.
+```{r}
+plot(irf.oil.cpi)
+```
+
+
+
+
+

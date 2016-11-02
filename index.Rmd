@@ -1,0 +1,543 @@
+---
+title       : Vietnam interest rate forecast model
+subtitle    : 
+author      : Duong T.Son, Le T.My
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : solarized_light      # 
+widgets     : [mathjax, quiz, bootstrap, shiny]
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+`r opts_chunk$set(echo=FALSE,message=FALSE,comment="")`
+
+## Nội dung
+
+> 1. Giới thiệu chung về rủi ro vĩ mô
+> 2. Lựa chọn mô hình phù hợp cho lãi suất
+> 3. Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất
+> 4. Xây dựng mô hình
+> 5. Ứng dụng
+
+--- .dark .nobackground .quote
+
+<q>Suy thoái kinh tế xảy ra __trung bình 10 năm 1 lần__ và khủng hoảng ngân hàng xảy ra trung bình 40 năm 1 lần.</q>
+
+```{r echo = F, cache = F}
+include<- function(file, prefix = "\t"){ 
+    writeLines(paste0(prefix, readLines(file)))
+}
+```
+
+--- .bigger
+
+## Giới thiệu chung về rủi ro vĩ mô
+
+- Khủng hoảng tài chính Châu Á:
+Đồng Bath mất hơn 50% giá trị, thị trường chứng khoán giảm 75%, công ty tài chính lớn nhất Thái lan phá sản. Nợ xấu tại Hàn quốc tăng mạnh khiến 787 tổ chức tín dụng mất khả năng thanh toán, đồng won giảm gần 1 nửa giá trị thị trường.
+
+- Suy thoái kinh tế 2008-2013 tại Việt Nam:
+Lãi suất tăng mạnh do chạy đua tăng trưởng tín dụng; SBV liên tục phá giá VND (có thời điểm SBV phá giá 9.3% trong 1 ngày).
+
+--- .bigger
+
+## Giới thiệu chung về rủi ro vĩ mô
+
+<center>
+```{r bunch_o_figs_svg, fig.height=5, fig.width=9, dev='svg'}
+#Load library
+library(zoo)
+library(xts)
+library(ggplot2)
+library(vars)
+library(tseries)
+library(urca)
+library(gridExtra)
+library(knitr)
+library(quantmod)
+library(forecast)
+
+d<-read.csv("VECM_data.csv",header=TRUE,sep=",")
+quarter<-as.yearqtr(d[,1],format="%Y Q%q")
+d<-xts(d[,-c(1)],order.by=quarter)
+
+# Actual set
+actual<-log(d)
+
+# Training set
+training<-window(actual,start=as.yearqtr("2000 Q1",format="%Y Q%q"),end=as.yearqtr("2015 Q3",format="%Y Q%q"))
+
+data<-actual
+
+growth<-diff(data,lag=4,differences=1)*100
+growth<-na.omit(growth)
+
+gdp.plot<-ggplot(growth,aes(x=index(growth),y=GDP))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(growth)),max(index(growth))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("GDP growth")
+
+cpi.plot<-ggplot(growth,aes(x=index(growth),y=CPI))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(growth)),max(index(growth))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("Inflation rate")
+
+rate.plot<-ggplot(d,aes(x=index(d)))+
+		geom_line(aes(y=Lending_rate,colour="Lending rate"))+
+		geom_line(aes(y=Deposit_rate,colour="Deposit rate"))+
+		theme(legend.title=element_blank(),legend.position="bottom")+
+		scale_x_yearqtr(limits=c(min(index(d)),max(index(d))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Percent")+
+    ggtitle("Interest rate")
+
+exrate.plot<-ggplot(d,aes(x=index(d),y=Exchange_rate))+geom_line()+
+		scale_x_yearqtr(limits=c(min(index(d)),max(index(d))),format="%YQ%q")+
+    xlab("Quarter")+ylab("Index")+
+    ggtitle("NEER")
+
+grid.arrange(gdp.plot,cpi.plot,rate.plot,exrate.plot,ncol=2)
+```
+</center>
+
+--- &twocol
+
+## Lựa chọn mô hình phù hợp cho lãi suất 
+
+*** =left
+
+```{r results='asis', highlight=TRUE}
+
+# googleVis chart
+
+rate_data<-data.frame(quarter=index(d),d$Lending_rate,d$Deposit_rate)
+
+rate_data<-melt(rate_data,id="quarter")
+
+rate_gvis<-gvisAnnotationChart(rate_data,datevar="quarter",numvar="value",idvar="variable",
+                         options=list(width=500,height=300))
+print(rate_gvis,'chart')
+```
+
+
+<br/>
+
+* Bị ảnh hưởng bởi chu kỳ kinh tế
+* Ít biến động trong ngắn hạn
+* Có thể dự báo bằng các yếu tố vĩ mô
+
+
+*** =right
+
+```{r results='asis', hightlight=TRUE}
+# Interbank rate
+
+interbank<-read.csv("Interbankrate.csv",header=TRUE)
+on_data<-data.frame(Date=as.Date(interbank[,1],"%d-%b-%y"),Overnight=as.numeric(interbank[,2]))
+
+on_data<-melt(on_data,id="Date")
+
+on_gvis<-gvisAnnotationChart(on_data,datevar="Date",numvar="value",idvar="variable",
+                         options=list(width=500,height=300))
+
+print(on_gvis,'chart')
+
+```
+
+<br/>
+
+* Chịu tác động của cung, cầu ngắn hạn trên thị trường
+* Biến động lớn trong ngắn hạn
+* Khó dự báo bằng các yếu tố vĩ mô
+
+
+---
+
+## Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất
+
+- Mô hình dự báo chuỗi thời gian sẽ giúp dự báo các giá trị tương lai về một đối tượng dự báo nào đó trên nền tảng xu hướng vận động của chính chuỗi dữ liệu đó trong quá khứ và hiện tại.
+
+- Ngoài ra, các biến kinh tế thường có các mối quan hệ với nhau, và dựa trên các mối quan hệ đó mà chúng ta có thể suy luận được hành vi của một biến số nào đó khi đã có thông tin từ các biến số khác có liên quan.
+
+- Loại mô hình thường được sử dụng để dự báo các biến số kinh tế:
+  + Mô hình hồi quy vector (VAR)
+  + Mô hình hồi quy sai số vector (VECM)
+
+
+
+--- .segue bg:black
+
+## Xây dựng mô hình
+
+---
+
+## Lựa chọn mô hình phù hợp theo lý thuyết kinh tế
+
+- Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.
+
+$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$
+
+- Trong đó:
+  + $p$: Chỉ số giá tiêu dùng
+  + $\epsilon$ : Tỷ giá danh nghĩa
+  + $p^W$ : Giá hàng hóa thế giới
+  + $M$ : Cung tiền
+  + $Y$ : GDP
+  + $r$ : Lãi suất danh nghĩa
+
+- Tồn tại sự tác động qua lại của các yếu tố vĩ mô nên mô hình trên có thể được dùng để phân tích và dự báo lãi suất, tỷ giá và tăng trưởng kinh tế.
+
+
+---
+
+## Nguồn dữ liệu
+
+- Dữ liệu theo quý từ 2000 Q1-2016 Q3, bao gồm các biến:
+  + GDP
+  + Chỉ số giá tiêu dùng CPI
+  + Tín dụng đối với nền kinh tế (sử dụng thay thế cung tiền)
+  + Lãi suất tiền gửi và lãi suất cho vay thị trường 1
+  + Tỷ giá danh nghĩa đa phương (NEER)
+  + Giá dầu giao ngay thế giới, đại diện cho biến giá hàng hóa thế giới
+
+- Nguồn dữ liệu: Quỹ tiền tệ quốc tế, Tổng cục thống kê . Dữ liệu GDP giai đoạn 2000-2012 có năm gốc là 1994 được chuyển sang năm gốc 2010 dựa trên số liệu tăng trưởng GDP trong quá khứ.
+
+- Tỷ giá danh nghĩa đa phương (NEER): dựa trên bình quân hình học, tỷ trọng của các đồng tiền bằng tỷ lệ giao dịch thương mại của Việt Nam với 8 quốc gia (Mỹ, EU, Trung Quốc, Nhật Bản, Hàn Quốc, Thái Lan, Singapore, Đài Loan).
+
+
+---
+
+## Đặc điểm dữ liệu
+
+<h3>Tính dừng (stationary)</h3>
+
+</div>
+- Kiểm định tính dừng(stationary) của chuỗi dữ liệu bằng Augmented Dickey-Fuller test:
+<a href="#demo" class="btn btn-info" data-toggle="collapse">Explain</a>
+<div id="demo" class="collapse">
+<p class="small">Để dự báo chính xác, chuỗi thời gian phải có tính dừng. Một chuỗi thời gian là dừng nếu trung bình, phương sai và tự đồng phương sai (tại các độ trễ khác nhau) sẽ giữ nguyên không đổi dù cho chúng được xác định vào thời điểm nào đi nữa.</p>
+</div>
+
+
+```{r results="asis"}
+data<-actual
+
+adf.matrix<-matrix(0,7,2)
+adf<-data.frame(names(data),adf.matrix)
+
+names(adf)<-c("Variable","ADF","p-value")
+
+for (i in 1:7){
+  t<-adf.test(data[,i])
+  adf[i,2]<-t$statistic
+  adf[i,3]<-t$p.value}
+
+kable(adf,digits=4,format="markdown",align='c')
+```
+
+- Các chuỗi dữ liệu khi kiểm định đều có p-value lớn hơn 0.01(tương ứng với độ tin cậy 99%), do ta không thể bác bỏ giả thuyết __H0: chuỗi dữ liệu không có tính dừng.__
+
+
+---
+
+## Đặc điểm dữ liệu
+
+<h3>Tính đồng liên kết (cointegration)</h3>
+
+</div>
+- Kiểm định tính đồng liên kết trong chuỗi dữ liệu bằng Johansen test:
+<a href="#demo1" class="btn btn-info" data-toggle="collapse">Explain</a>
+<div id="demo1" class="collapse">
+<p class="small">Theo nghiên cứu nổi tiếng của Engle và Granger (1986), khi xét mô hình có nhiều biến số theo chuỗi thời gian, cũng có nhiều trường hợp, mặc dù các biến số là không dừng, nhưng khi thực hiện phép hồi quy hay tổ hợp tuyến tính của các biến này vẫn cho ra một chuỗi dừng. Trong trường hợp này, mô hình vẫn có thể ước lượng được mà không bị hiện tượng hồi quy giả mạo và mối quan hệ giữa các biến được gọi là quan hệ đồng liên kết.</p>
+</div>
+
+```{r results="asis", tidy=T, prompt=F, comment=NA}
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+rank.test<-cbind(test=vecm@teststat,vecm@cval)
+
+coint.rank=2
+
+kable(rank.test,digits=2,format="markdown",align='c')
+```
+
+- Kết quả trace test lớn hơn giá trị tương ứng với độ tin cậy 99%(1pct) sẽ cho phép bác bỏ giả thuyết H0 (bậc đồng liên kết nhỏ hơn k). Kết quả cho thấy xác suất đến 99% có 5 cặp chuỗi dữ liệu có tính đồng liên kết. Tuy nhiên, để giảm rủi ro chuỗi dữ liệu ngắn sẽ trả ra kết quả không chính xác, ta nên chọn bậc đồng liên kết có giá trị lớn, r=2.
+
+---
+
+## Ước lượng mô hình
+
+- Mô hình ước lượng nhiều chuỗi dữ liệu là không dừng và đồng liên kết. Như vậy, mô hình VECM là phù hợp khi chúng ta có nhiều chuỗi thời gian khác nhau và cần phải xem xét mối quan hệ, tác động qua lại giữa chúng.
+
+- Mô hình được ước lượng bằng phương pháp OLS với bậc đồng liên kết bằng 2. Kết quả ước lượng bao gồm 7 phương trình tương đương với 7 biến số kinh tế.
+
+```{r results="asis"}
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=coint.rank)
+vecm.level<-vec2var(vecm,r=coint.rank)
+```
+
+<a href="Macromodel.html">Original paper</a>
+
+---
+
+## Kiểm định kết quả
+
+### Kiểm định phương sai thay đổi - Heteroskedasticity test
+
+```{r tidy=T, prompt=F, comment=NA, collapse=T}
+#Diagnostic testing
+##Test heteroscedasticity - OK
+var.arch<-arch.test(vecm.level,lags.multi=5,multivariate.only=T)
+var.arch
+
+```
+
+Mô hình có thể tin tưởng được nếu kết quả cho thấy p-value &gt; 0.01 (xác suất 99%). Phương sai của phần dư không thay đổi.
+
+--- .bigger
+
+## Kiểm định kết quả
+
+<h3>Kiểm định phân bố chuẩn - Normality test</h3>
+
+```{r results='markup', tidy=T, prompt=F, comment=NA}
+var.norm<-normality.test(vecm.level,multivariate.only=T)
+var.norm$jb.mul$JB
+```
+
+Mô hình có thể tin tưởng được nếu kết quả cho thấy p-value > 0.01 (xác suất 99%). JB test có kết quả p-value > 0.01. Do đó, ta chưa thể bác bỏ giả thuyết __H0:chuỗi phần dư có phân phối chuẩn.__
+
+--- .bigger
+
+## Kiểm định kết quả
+
+<h3>Kiểm định tương quan chuỗi - Serial Correlation test</h3>
+
+```{r results='markup', tidy=T, prompt=F, comment=NA}
+var.serial<-serial.test(vecm.level,lags.pt=20,type="PT.asymptotic")
+var.serial
+```
+
+Kết quả p-value lớn hơn 0.01, do đó chưa có đủ cơ sở để bác bỏ giả thuyết __H0: Không có tương quan giữa các chuỗi phần dư.__
+
+---
+
+## Kiểm định khả năng dự báo
+
+Khả năng dự báo của mô hình được kiểm định bằng 3 hệ số Trung bình sai số tuyệt đối (RMSE), Trung bình sai số tuyệt đối bình phương (MAE) và Phần trăm sai số tuyệt đối bình quân (MAPE),hệ số càng nhỏ, khả năng dự báo càng chính xác
+
+Mô hình đưa ra dự báo đối với 4 quý tiếp (2015Q4-2016Q3) theo dựa trên dữ liệu từ 2000Q1-2015Q3, kết quả đo lường sai số như sau:
+
+```{r results='asis'}
+# Training data
+data<-training
+
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+
+rank.test<-cbind(test=vecm@teststat,vecm@cval)
+
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=2)
+vecm.level<-vec2var(vecm,r=2)
+
+#Forecast
+## Forecast horizon
+horizon=4
+
+x<-c(1:horizon)
+for (i in 1:horizon){
+  if (horizon==1){x[1]<-max(index(data))+0.25}
+  else {x[1]<-max(index(data))+0.25
+  x[i]<-max(x)+0.25}
+}
+x<-as.yearqtr(x)
+
+## Forecast
+p<-predict(vecm.level,n.ahead=horizon)
+forecast<-p$fcst
+
+##Create forecast matrices for each variable
+variable<-names(data)
+f.list<-list()
+
+for (i in 1:length(variable)){
+value<-cbind(data[,i],lower=data[,i],upper=data[,i])
+f<-as.data.frame(forecast[i])
+f<-data.frame(f[,1:3])
+f<-xts(f,x)
+f<-rbind(value,f)
+f<-exp(f)
+f.list[[i]]<-assign(as.character(variable[i]),f)
+}
+
+# Comparision data
+a.indicator<-c("RMSE","MAE","MAPE")
+accuracy.matrix<-matrix(0,nrow=3,ncol=7)
+accuracy.table<-data.frame(a.indicator,accuracy.matrix)
+names(accuracy.table)<-c("Indicators",variable)
+
+for (i in 1:7){
+  # Construct data set
+  f.temp<-window(f.list[[i]][,1],start=as.yearqtr("2015 Q4",format="%Y Q%q"))
+  a.temp<-window(exp(actual[,i]),start=as.yearqtr("2015 Q4",format="%Y Q%q"))
+  
+  # COnvert to forecast object
+  fc<-structure(f.temp,class="forecast")
+  # Accuracy test
+  a<-accuracy(fc,a.temp[,1],d=0)
+  
+  # Paste values to accuracy table
+  for (j in a.indicator) {
+    accuracy.table[,i+1]<-a[c(2,3,5)]
+  }
+}
+kable(accuracy.table,digits=2,format="markdown")
+
+```
+
+Có thể thấy sai số đối với dự báo GDP,CPI, tăng trưởng tín dụng và lãi suất cho vay tương đối nhỏ (MAPE<15%) và có thể dùng để dự báo. Giá dầu là biến ngoại sinh, do đó mô hình không thực hiện dự báo đối với mặt hàng này.
+
+---
+
+## Ứng dụng
+
+<h3> Dự báo các chỉ số kinh tế vĩ mô</h3>
+
+Kết quả dự báo 4 quý tiếp theo từ 2016 Q4:
+
+```{r}
+# Actual data
+data<-actual
+
+#Order selection AIC criteria
+order<-VARselect(data,lag.max=4,type="both",season=4)
+order.select<-as.numeric(order$selection[1])
+
+#Cointegration test
+vecm<-ca.jo(data,type="trace",K=order.select,season=4,ecdet="trend",spec="transitory")
+
+# estimate VECM model
+vecm.r2<-cajorls(vecm,r=2)
+vecm.level<-vec2var(vecm,r=2)
+
+#Forecast
+## Forecast horizon
+horizon=4
+
+x<-c(1:horizon)
+for (i in 1:horizon){
+  if (horizon==1){x[1]<-max(quarter)+0.25}
+  else {x[1]<-max(quarter)+0.25
+  x[i]<-max(x)+0.25}
+}
+x<-as.yearqtr(x)
+
+## Forecast
+p<-predict(vecm.level,n.ahead=horizon)
+forecast<-p$fcst
+
+##Create forecast matrices for each variable
+variable<-names(data)
+f.list<-list()
+
+for (i in 1:length(variable)){
+value<-cbind(data[,i],lower=data[,i],upper=data[,i])
+f<-as.data.frame(forecast[i])
+f<-data.frame(f[,1:3])
+f<-xts(f,x)
+f<-rbind(value,f)
+f<-exp(f)
+f.list[[i]]<-assign(as.character(variable[i]),f)
+}
+
+
+output.var<-c("GDP (%YoY)","Inflation (%YoY)","Credit growth (%YoY)","Lending rate (%)","NEER")
+output.matrix<-matrix(0,nrow=5,ncol=horizon)
+output.table<-data.frame(output.var,output.matrix)
+length<-length(index(f.list[[1]]))
+names(output.table)<-c("Indicators",as.character(index(f.list[[1]][(length-horizon+1):length])))
+
+
+date<-index(f.list[[1]])
+
+# Convert GDP forecast
+gdp.growth<-Delt(as.numeric(GDP[,1]),k=4,type="arithmetic")*100
+# Inflation forecast
+cpi.growth<-Delt(as.numeric(CPI[,1]),k=4,type="arithmetic")*100
+# Credit growth forecast
+credit.growth<-Delt(as.numeric(Credit[,1]),k=4,type="arithmetic")*100
+# Lending rate forecast
+lending<-as.numeric(Lending_rate[,1])
+# Exchange rate
+exrate<-as.numeric(Exchange_rate[,1])
+
+output<-data.frame(gdp.growth,cpi.growth,credit.growth,lending,exrate)
+output<-xts(output,date)
+output<-window(output,start=index(f.list[[1]][(length-horizon+1)]))
+
+output.table[,2:ncol(output.table)]<-as.numeric(t(output))
+
+kable(output.table,digits=2,format="markdown")
+
+```
+
+
+--- &twocol
+
+## Ứng dụng
+
+<h3>Dự báo tác động của chính sách</h3>
+
+Một ứng dụng quan trọng khác của mô hình là khả năng phân tích tác động của chính sách tiền tệ với nền kinh tế nói chung và hoạt động kinh doanh nói riêng thông qua hàm xung ứng.
+
+*** =left
+
+<strong>Huy động -> Cho vay</strong>
+<p class="small">Lãi suất huy động có ảnh hưởng cùng chiều tới lãi suất cho vay lớn nhất trong 2 quý đầu tiên, tác động sẽ giảm mạnh kể từ quý thứ 3.</p>
+
+
+```{r fig.height=4, fig.width=8, dev='svg'}
+#Impulse response
+irf.deposit.lending<-irf(vecm.level,impulse="Deposit_rate",response="Lending_rate",n.ahead=12,boot=T)
+plot(irf.deposit.lending)
+```
+
+
+*** =right
+
+<strong>Giá dầu -> Lạm phát</strong>
+<p class="small">Biến động giá dầu có tác động khá lớn tới lạm phát tại nước ta. Tuy nhiên, tác động có độ trễ khoảng 3 đến 4 quý.</p>
+
+```{r fig.height=4, fig.width=8, dev='svg'}
+irf.oil.cpi<-irf(vecm.level,impulse="oil",response="CPI",n.ahead=12,boot=T)
+plot(irf.oil.cpi)
+
+```
+
+---
+
+## Web application
+
+Ứng dụng khai thác kết quả mô hình:
+
+<a href="https://duongtson.shinyapps.io/shiny/" target="_blank">Web application</a> 
+
+
+--- .segue bg:grey .quote
+
+## THANK YOU FOR LISTENING
+
+
+
+
+
