@@ -2,7 +2,8 @@
 title       : Vietnam interest rate forecast model
 subtitle    : 
 author      : Duong T.Son, Le T.My
-job         : 
+logo        : physics.svg
+license     : by-nc-sa
 framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
 highlighter : highlight.js  # {highlight.js, prettify, highlight}
 hitheme     : solarized_light      # 
