@@ -3461,8 +3461,8 @@ callbacks.shift()();
 
 ## Mô hình kinh tế lượng áp dụng đối với xu hướng ngắn hạn của lãi suất
 
-- Lãi suất O/N biến động lớn trong ngắn hạn
-- Khó dự báo các nhân tố tác động lên lãi suát O/N
+- Lãi suất ON biến động lớn trong ngắn hạn
+- Khó dự báo các nhân tố tác động lên lãi suất ON
 - Long memory
 
 ![plot of chunk unnamed-chunk-4](assets/fig/unnamed-chunk-4-1.svg)
