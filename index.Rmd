@@ -134,9 +134,9 @@ print(rate_gvis,'chart')
 # Interbank rate
 
 interbank<-read.csv("Interbankrate.csv",header=TRUE)
-on_data<-data.frame(Date=as.Date(interbank[,1],"%d-%b-%y"),Overnight=as.numeric(interbank[,2]))
+on_data_f<-data.frame(Date=as.Date(interbank[,1],"%d-%b-%y"),Overnight=as.numeric(interbank[,2]))
 
-on_data<-melt(on_data,id="Date")
+on_data<-melt(on_data_f,id="Date")
 
 on_gvis<-gvisAnnotationChart(on_data,datevar="Date",numvar="value",idvar="variable",
                          options=list(width=500,height=300))
@@ -151,6 +151,47 @@ print(on_gvis,'chart')
 * Biến động lớn trong ngắn hạn
 * Khó dự báo bằng các yếu tố vĩ mô
 
+--- .segue bg:gray
+
+## Lãi suất thị trường 2
+
+---
+
+## Mô hình kinh tế lượng áp dụng đối với xu hướng ngắn hạn của lãi suất
+
+- Lãi suất O/N biến động lớn trong ngắn hạn
+- Khó dự báo các nhân tố tác động lên lãi suát O/N
+- Long memory
+
+```{r fig.height=4, fig.width=8, dev='svg'}
+Overnight<-on_data_f[,2]
+acf(Overnight)
+
+```
+
+
+---
+
+## Mô hình ARFIMA(p,d,q)-GARCH(r,s)
+
+  <p><center>$\phi(L)Y_{t} = \theta(L)(1-L)^{d}\epsilon_{t}$</center></p>
+  <p><center>$\epsilon_{t} = \epsilon\sigma_{t}$</center></p>
+  <p><center>$\sigma_{t}^2 = \omega + \sum_{j=1}^r\alpha_{j}\epsilon_{t-j}^2 + \sum_{j=1}^s\beta_{j}\sigma_{t-j}^2$</center></p>
+
+Mô hình ARFIMA-GARCH gồm 2 phần:
+
+- ARFIMA: Dự báo được biến động trong tương lai bằng phương pháp tự hồi quy. Mô hình này khắc phục nhược điểm của mô hình ARIMA là có bậc sai phân (độ trễ) biến động với mức chia nhỏ từ 0->1, thích hợp để mô hình  chuỗi dữ liệu có long memory.
+
+- GARCH: Đo lường và dự báo rủi ro, khắc phục được giả định phương sai cố định của mô hình kinh tế lượng thông thường.
+
+Phương pháp ước lượng : MLE (Maximum likelihood estimation) <a href="https://duongtson.shinyapps.io/shiny_garch/" target="_blank">ARFIMA-GARCH Web application</a> 
+
+---
+
+
+--- .segue bg:black
+
+## Lãi suất trên thị trường 1
 
 ---
 
@@ -166,9 +207,7 @@ print(on_gvis,'chart')
 
 
 
---- .segue bg:black
 
-## Xây dựng mô hình
 
 ---
 
@@ -176,7 +215,7 @@ print(on_gvis,'chart')
 
 - Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.
 
-$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$
+<center>$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$</center>
 
 - Trong đó:
   + $p$: Chỉ số giá tiêu dùng

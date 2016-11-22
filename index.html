@@ -550,14 +550,14 @@ callbacks.shift()();
 <div style='float:right;width:48%;'>
   <!-- AnnotationChart generated in R 3.3.1 by googleVis 0.6.1 package -->
 
-<!-- Wed Nov 02 08:07:01 2016 -->
+<!-- Wed Nov 23 01:11:27 2016 -->
 
 <!-- jsHeader -->
 
 <script type="text/javascript">
  
 // jsData 
-function gvisDataAnnotationChartIDb2c7b5c753d () {
+function gvisDataAnnotationChartID1e201d61798c () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -3449,14 +3449,14 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartAnnotationChartIDb2c7b5c753d() {
-var data = gvisDataAnnotationChartIDb2c7b5c753d();
+function drawChartAnnotationChartID1e201d61798c() {
+var data = gvisDataAnnotationChartID1e201d61798c();
 var options = {};
 options["width"] = 500;
 options["height"] = 300;
 
     var chart = new google.visualization.AnnotationChart(
-    document.getElementById('AnnotationChartIDb2c7b5c753d')
+    document.getElementById('AnnotationChartID1e201d61798c')
     );
     chart.draw(data,options);
     
@@ -3480,9 +3480,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartAnnotationChartIDb2c7b5c753d);
+callbacks.push(drawChartAnnotationChartID1e201d61798c);
 })();
-function displayChartAnnotationChartIDb2c7b5c753d() {
+function displayChartAnnotationChartID1e201d61798c() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -3508,12 +3508,12 @@ callbacks.shift()();
 
 <!-- jsChart -->  
 
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartAnnotationChartIDb2c7b5c753d"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartAnnotationChartID1e201d61798c"></script>
  
 
 <!-- divChart -->
 
-<div id="AnnotationChartIDb2c7b5c753d" 
+<div id="AnnotationChartID1e201d61798c" 
   style="width: 500; height: 300;">
 </div>
 
@@ -3530,7 +3530,73 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-6" style="background:;">
+<slide class="segue" id="slide-6" style="background:gray;">
+  <hgroup>
+    <h2>Lãi suất thị trường 2</h2>
+  </hgroup>
+  <article data-timings="">
+    
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Mô hình kinh tế lượng áp dụng đối với xu hướng ngắn hạn của lãi suất</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Lãi suất O/N biến động lớn trong ngắn hạn</li>
+<li>Khó dự báo các nhân tố tác động lên lãi suát O/N</li>
+<li>Long memory</li>
+</ul>
+
+<p><img src="assets/fig/unnamed-chunk-4-1.svg" alt="plot of chunk unnamed-chunk-4"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <hgroup>
+    <h2>Mô hình ARFIMA(p,d,q)-GARCH(r,s)</h2>
+  </hgroup>
+  <article data-timings="">
+    <p><p><center>\(\phi(L)Y_{t} = \theta(L)(1-L)^{d}\epsilon_{t}\)</center></p>
+  <p><center>\(\epsilon_{t} = \epsilon\sigma_{t}\)</center></p>
+  <p><center>\(\sigma_{t}^2 = \omega + \sum_{j=1}^r\alpha_{j}\epsilon_{t-j}^2 + \sum_{j=1}^s\beta_{j}\sigma_{t-j}^2\)</center></p></p>
+
+<p>Mô hình ARFIMA-GARCH gồm 2 phần:</p>
+
+<ul>
+<li><p>ARFIMA: Dự báo được biến động trong tương lai bằng phương pháp tự hồi quy. Mô hình này khắc phục nhược điểm của mô hình ARIMA là có bậc sai phân (độ trễ) biến động với mức chia nhỏ từ 0-&gt;1, thích hợp để mô hình  chuỗi dữ liệu có long memory.</p></li>
+<li><p>GARCH: Đo lường và dự báo rủi ro, khắc phục được giả định phương sai cố định của mô hình kinh tế lượng thông thường.</p></li>
+</ul>
+
+<p>Phương pháp ước lượng : MLE (Maximum likelihood estimation) <a href="https://duongtson.shinyapps.io/shiny_garch/" target="_blank">ARFIMA-GARCH Web application</a> </p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-9" style="background:;">
+  <article data-timings="">
+    
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="segue" id="slide-10" style="background:black;">
+  <hgroup>
+    <h2>Lãi suất trên thị trường 1</h2>
+  </hgroup>
+  <article data-timings="">
+    
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-11" style="background:;">
   <hgroup>
     <h2>Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất</h2>
   </hgroup>
@@ -3550,17 +3616,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="segue" id="slide-7" style="background:black;">
-  <hgroup>
-    <h2>Xây dựng mô hình</h2>
-  </hgroup>
-  <article data-timings="">
-    
-  </article>
-  <!-- Presenter Notes -->
-</slide>
-
-<slide class="" id="slide-8" style="background:;">
+<slide class="" id="slide-12" style="background:;">
   <hgroup>
     <h2>Lựa chọn mô hình theo lý thuyết kinh tế</h2>
   </hgroup>
@@ -3569,7 +3625,7 @@ callbacks.shift()();
 <li>Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.</li>
 </ul>
 
-<p>\(\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}\)</p>
+<p><center>\(\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}\)</center></p>
 
 <ul>
 <li><p>Trong đó:</p>
@@ -3589,7 +3645,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-9" style="background:;">
+<slide class="" id="slide-13" style="background:;">
   <hgroup>
     <h2>Nguồn dữ liệu</h2>
   </hgroup>
@@ -3613,7 +3669,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-10" style="background:;">
+<slide class="" id="slide-14" style="background:;">
   <hgroup>
     <h2>Đặc điểm dữ liệu</h2>
   </hgroup>
@@ -3682,7 +3738,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-11" style="background:;">
+<slide class="" id="slide-15" style="background:;">
   <hgroup>
     <h2>Đặc điểm dữ liệu</h2>
   </hgroup>
@@ -3767,7 +3823,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-12" style="background:;">
+<slide class="" id="slide-16" style="background:;">
   <hgroup>
     <h2>Ước lượng mô hình</h2>
   </hgroup>
@@ -3783,7 +3839,7 @@ callbacks.shift()();
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-13" style="background:;">
+<slide class="" id="slide-17" style="background:;">
   <hgroup>
     <h2>Kiểm định kết quả</h2>
   </hgroup>
@@ -3803,7 +3859,7 @@ Chi-squared = 1624, df = 3920, p-value = 1
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="bigger" id="slide-14" style="background:;">
+<slide class="bigger" id="slide-18" style="background:;">
   <hgroup>
     <h2>Kiểm định kết quả</h2>
   </hgroup>
@@ -3823,7 +3879,7 @@ Chi-squared = 26.962, df = 14, p-value = 0.01947
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="bigger" id="slide-15" style="background:;">
+<slide class="bigger" id="slide-19" style="background:;">
   <hgroup>
     <h2>Kiểm định kết quả</h2>
   </hgroup>
@@ -3843,7 +3899,7 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-16" style="background:;">
+<slide class="" id="slide-20" style="background:;">
   <hgroup>
     <h2>Kiểm định khả năng dự báo</h2>
   </hgroup>
@@ -3866,9 +3922,9 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
 </thead><tbody>
 <tr>
 <td align="left">RMSE</td>
-<td align="right">3057.20</td>
+<td align="right">3057.21</td>
 <td align="right">3.37</td>
-<td align="right">212070.33</td>
+<td align="right">212070.69</td>
 <td align="right">0.82</td>
 <td align="right">0.81</td>
 <td align="right">4.80</td>
@@ -3876,9 +3932,9 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
 </tr>
 <tr>
 <td align="left">MAE</td>
-<td align="right">2842.39</td>
+<td align="right">2842.40</td>
 <td align="right">2.83</td>
-<td align="right">205176.83</td>
+<td align="right">205177.17</td>
 <td align="right">0.75</td>
 <td align="right">0.73</td>
 <td align="right">4.59</td>
@@ -3902,7 +3958,7 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-17" style="background:;">
+<slide class="" id="slide-21" style="background:;">
   <hgroup>
     <h2>Ứng dụng</h2>
   </hgroup>
@@ -3961,7 +4017,7 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-18" style="background:;">
+<slide class="" id="slide-22" style="background:;">
   <hgroup>
     <h2>Ứng dụng</h2>
   </hgroup>
@@ -3975,7 +4031,7 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
 
 <p class="small">Lãi suất huy động có ảnh hưởng cùng chiều tới lãi suất cho vay lớn nhất trong 2 quý đầu tiên, tác động sẽ giảm mạnh kể từ quý thứ 3.</p>
 
-<p><img src="assets/fig/unnamed-chunk-12-1.svg" alt="plot of chunk unnamed-chunk-12"></p>
+<p><img src="assets/fig/unnamed-chunk-13-1.svg" alt="plot of chunk unnamed-chunk-13"></p>
 
 </div>
 <div style='float:right;width:48%;'>
@@ -3983,14 +4039,14 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
 
 <p class="small">Biến động giá dầu có tác động khá lớn tới lạm phát tại nước ta. Tuy nhiên, tác động có độ trễ khoảng 3 đến 4 quý.</p>
 
-<p><img src="assets/fig/unnamed-chunk-13-1.svg" alt="plot of chunk unnamed-chunk-13"></p>
+<p><img src="assets/fig/unnamed-chunk-14-1.svg" alt="plot of chunk unnamed-chunk-14"></p>
 
 </div>
   </article>
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="" id="slide-19" style="background:;">
+<slide class="" id="slide-23" style="background:;">
   <hgroup>
     <h2>Web application</h2>
   </hgroup>
@@ -4003,7 +4059,7 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
   <!-- Presenter Notes -->
 </slide>
 
-<slide class="segue quote" id="slide-20" style="background:grey;">
+<slide class="segue quote" id="slide-24" style="background:grey;">
   <hgroup>
     <h2>THANK YOU FOR LISTENING</h2>
   </hgroup>
@@ -4049,92 +4105,116 @@ Chi-squared = 815.05, df = 791, p-value = 0.2692
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=6 title='Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất'>
+        data-slide=6 title='Lãi suất thị trường 2'>
          6
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=7 title='Xây dựng mô hình'>
+        data-slide=7 title='Mô hình kinh tế lượng áp dụng đối với xu hướng ngắn hạn của lãi suất'>
          7
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=8 title='Lựa chọn mô hình theo lý thuyết kinh tế'>
+        data-slide=8 title='Mô hình ARFIMA(p,d,q)-GARCH(r,s)'>
          8
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=9 title='Nguồn dữ liệu'>
+        data-slide=9 title='NA'>
          9
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=10 title='Đặc điểm dữ liệu'>
+        data-slide=10 title='Lãi suất trên thị trường 1'>
          10
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=11 title='Đặc điểm dữ liệu'>
+        data-slide=11 title='Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất'>
          11
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=12 title='Ước lượng mô hình'>
+        data-slide=12 title='Lựa chọn mô hình theo lý thuyết kinh tế'>
          12
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=13 title='Kiểm định kết quả'>
+        data-slide=13 title='Nguồn dữ liệu'>
          13
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=14 title='Kiểm định kết quả'>
+        data-slide=14 title='Đặc điểm dữ liệu'>
          14
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=15 title='Kiểm định kết quả'>
+        data-slide=15 title='Đặc điểm dữ liệu'>
          15
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=16 title='Kiểm định khả năng dự báo'>
+        data-slide=16 title='Ước lượng mô hình'>
          16
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=17 title='Ứng dụng'>
+        data-slide=17 title='Kiểm định kết quả'>
          17
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=18 title='Ứng dụng'>
+        data-slide=18 title='Kiểm định kết quả'>
          18
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=19 title='Web application'>
+        data-slide=19 title='Kiểm định kết quả'>
          19
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=20 title='THANK YOU FOR LISTENING'>
+        data-slide=20 title='Kiểm định khả năng dự báo'>
          20
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=21 title='Ứng dụng'>
+         21
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=22 title='Ứng dụng'>
+         22
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=23 title='Web application'>
+         23
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=24 title='THANK YOU FOR LISTENING'>
+         24
       </a>
     </li>
   </ul>

@@ -483,14 +483,14 @@ callbacks.shift()();
 *** =right
 
 <!-- AnnotationChart generated in R 3.3.1 by googleVis 0.6.1 package -->
-<!-- Wed Nov 02 08:07:01 2016 -->
+<!-- Wed Nov 23 01:11:27 2016 -->
 
 
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataAnnotationChartIDb2c7b5c753d () {
+function gvisDataAnnotationChartID1e201d61798c () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -3382,14 +3382,14 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartAnnotationChartIDb2c7b5c753d() {
-var data = gvisDataAnnotationChartIDb2c7b5c753d();
+function drawChartAnnotationChartID1e201d61798c() {
+var data = gvisDataAnnotationChartID1e201d61798c();
 var options = {};
 options["width"] = 500;
 options["height"] = 300;
 
     var chart = new google.visualization.AnnotationChart(
-    document.getElementById('AnnotationChartIDb2c7b5c753d')
+    document.getElementById('AnnotationChartID1e201d61798c')
     );
     chart.draw(data,options);
     
@@ -3413,9 +3413,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartAnnotationChartIDb2c7b5c753d);
+callbacks.push(drawChartAnnotationChartID1e201d61798c);
 })();
-function displayChartAnnotationChartIDb2c7b5c753d() {
+function displayChartAnnotationChartID1e201d61798c() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -3439,11 +3439,11 @@ callbacks.shift()();
 </script>
  
 <!-- jsChart -->  
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartAnnotationChartIDb2c7b5c753d"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartAnnotationChartID1e201d61798c"></script>
  
 <!-- divChart -->
   
-<div id="AnnotationChartIDb2c7b5c753d" 
+<div id="AnnotationChartID1e201d61798c" 
   style="width: 500; height: 300;">
 </div>
 
@@ -3453,6 +3453,43 @@ callbacks.shift()();
 * Biến động lớn trong ngắn hạn
 * Khó dự báo bằng các yếu tố vĩ mô
 
+--- .segue bg:gray
+
+## Lãi suất thị trường 2
+
+---
+
+## Mô hình kinh tế lượng áp dụng đối với xu hướng ngắn hạn của lãi suất
+
+- Lãi suất O/N biến động lớn trong ngắn hạn
+- Khó dự báo các nhân tố tác động lên lãi suát O/N
+- Long memory
+
+![plot of chunk unnamed-chunk-4](assets/fig/unnamed-chunk-4-1.svg)
+
+
+---
+
+## Mô hình ARFIMA(p,d,q)-GARCH(r,s)
+
+  <p><center>$\phi(L)Y_{t} = \theta(L)(1-L)^{d}\epsilon_{t}$</center></p>
+  <p><center>$\epsilon_{t} = \epsilon\sigma_{t}$</center></p>
+  <p><center>$\sigma_{t}^2 = \omega + \sum_{j=1}^r\alpha_{j}\epsilon_{t-j}^2 + \sum_{j=1}^s\beta_{j}\sigma_{t-j}^2$</center></p>
+
+Mô hình ARFIMA-GARCH gồm 2 phần:
+
+- ARFIMA: Dự báo được biến động trong tương lai bằng phương pháp tự hồi quy. Mô hình này khắc phục nhược điểm của mô hình ARIMA là có bậc sai phân (độ trễ) biến động với mức chia nhỏ từ 0->1, thích hợp để mô hình  chuỗi dữ liệu có long memory.
+
+- GARCH: Đo lường và dự báo rủi ro, khắc phục được giả định phương sai cố định của mô hình kinh tế lượng thông thường.
+
+Phương pháp ước lượng : MLE (Maximum likelihood estimation) <a href="https://duongtson.shinyapps.io/shiny_garch/" target="_blank">ARFIMA-GARCH Web application</a> 
+
+---
+
+
+--- .segue bg:black
+
+## Lãi suất trên thị trường 1
 
 ---
 
@@ -3468,9 +3505,7 @@ callbacks.shift()();
 
 
 
---- .segue bg:black
 
-## Xây dựng mô hình
 
 ---
 
@@ -3478,7 +3513,7 @@ callbacks.shift()();
 
 - Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.
 
-$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$
+<center>$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$</center>
 
 - Trong đó:
   + $p$: Chỉ số giá tiêu dùng
@@ -3636,8 +3671,8 @@ Mô hình đưa ra dự báo đối với 4 quý tiếp (2015Q4-2016Q3) theo d�
 
 |Indicators |     GDP|  CPI|    Credit| Deposit_rate| Lending_rate| Exchange_rate|   oil|
 |:----------|-------:|----:|---------:|------------:|------------:|-------------:|-----:|
-|RMSE       | 3057.20| 3.37| 212070.33|         0.82|         0.81|          4.80|  6.55|
-|MAE        | 2842.39| 2.83| 205176.83|         0.75|         0.73|          4.59|  6.20|
+|RMSE       | 3057.21| 3.37| 212070.69|         0.82|         0.81|          4.80|  6.55|
+|MAE        | 2842.40| 2.83| 205177.17|         0.75|         0.73|          4.59|  6.20|
 |MAPE       |    0.38| 1.90|      3.63|        15.11|        10.53|          6.54| 15.69|
 
 Có thể thấy sai số đối với dự báo GDP,CPI, tăng trưởng tín dụng và lãi suất cho vay tương đối nhỏ (MAPE<15%) và có thể dùng để dự báo. Giá dầu là biến ngoại sinh, do đó mô hình không thực hiện dự báo đối với mặt hàng này.
@@ -3674,7 +3709,7 @@ Một ứng dụng quan trọng khác của mô hình là khả năng phân tíc
 <p class="small">Lãi suất huy động có ảnh hưởng cùng chiều tới lãi suất cho vay lớn nhất trong 2 quý đầu tiên, tác động sẽ giảm mạnh kể từ quý thứ 3.</p>
 
 
-![plot of chunk unnamed-chunk-12](assets/fig/unnamed-chunk-12-1.svg)
+![plot of chunk unnamed-chunk-13](assets/fig/unnamed-chunk-13-1.svg)
 
 
 *** =right
@@ -3682,7 +3717,7 @@ Một ứng dụng quan trọng khác của mô hình là khả năng phân tíc
 <strong>Giá dầu -> Lạm phát</strong>
 <p class="small">Biến động giá dầu có tác động khá lớn tới lạm phát tại nước ta. Tuy nhiên, tác động có độ trễ khoảng 3 đến 4 quý.</p>
 
-![plot of chunk unnamed-chunk-13](assets/fig/unnamed-chunk-13-1.svg)
+![plot of chunk unnamed-chunk-14](assets/fig/unnamed-chunk-14-1.svg)
 
 ---
 
