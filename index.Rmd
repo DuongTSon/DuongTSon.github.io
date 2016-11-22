@@ -17,9 +17,8 @@ knit        : slidify::knit2slides
 
 > 1. Giới thiệu chung về rủi ro vĩ mô
 > 2. Lựa chọn mô hình phù hợp cho lãi suất
-> 3. Mô hình kinh tế lượng áp dụng đối với xu hướng dài hạn của lãi suất
-> 4. Xây dựng mô hình
-> 5. Ứng dụng
+> 3. Mô hình lãi suất liên ngân hàng
+> 4. Mô hình lãi suất thị trường 1
 
 --- .dark .nobackground .quote
 
@@ -151,9 +150,9 @@ print(on_gvis,'chart')
 * Biến động lớn trong ngắn hạn
 * Khó dự báo bằng các yếu tố vĩ mô
 
---- .segue bg:gray
+--- .segue bg:black
 
-## Lãi suất thị trường 2
+## Mô hình lãi suất liên ngân hàng
 
 ---
 
@@ -191,7 +190,7 @@ Phương pháp ước lượng : MLE (Maximum likelihood estimation) <a href="ht
 
 --- .segue bg:black
 
-## Lãi suất trên thị trường 1
+## Mô hình lãi suất thị trường 1
 
 ---
 
@@ -213,7 +212,7 @@ Phương pháp ước lượng : MLE (Maximum likelihood estimation) <a href="ht
 
 ## Lựa chọn mô hình theo lý thuyết kinh tế
 
-- Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia) do IMF nghiên cứu và xuất bản năm 2013.
+- Mô hình dự báo dựa trên Mô hình lạm phát đối với các quốc gia nhỏ (Inflation Dynamics and Monetary transmission in Vietnam and Emerging Asia, IMF 2013).
 
 <center>$\Delta p_{t} = \kappa_{1}\Delta\epsilon_{t} + \kappa_{2}\Delta_p{t}^W + \kappa_{3}\Delta M_{t} + \kappa_{4}\Delta Y_{t} + \kappa_{5}\Delta r_{t} + \zeta_{t}$</center>
 
